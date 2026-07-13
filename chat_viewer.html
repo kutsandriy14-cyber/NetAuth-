@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetAuth .chat Viewer & Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-lg shadow-indigo-500/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-white tracking-tight flex items-center">
+                    NetAuth <span class="text-indigo-400 ml-1.5 code-font text-sm font-medium bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">.chat Viewer</span>
+                </h1>
+                <p class="text-xs text-slate-400">Offline viewer and simulation generator utility</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="generateFakeChat()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-semibold rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Mock Chat</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Sidebar / File Drop -->
+        <section class="lg:col-span-4 flex flex-col space-y-4">
+            
+            <!-- File Uploader Card -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col">
+                <h2 class="text-white font-bold text-base mb-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload Transcript
+                </h2>
+                <p class="text-slate-400 text-xs mb-4">Select or drag and drop an exported <b>.chat</b> file to render the correspondence instantly.</p>
+                
+                <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-indigo-500/50 bg-slate-950/50 hover:bg-slate-950 rounded-xl p-8 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[160px]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-xs font-semibold text-indigo-400">Choose .chat file</span>
+                    <span class="text-[10px] text-slate-500 mt-1">or drag & drop here</span>
+                    <input type="file" id="file-input" accept=".chat" class="hidden">
+                </div>
+            </div>
+
+            <!-- Chat Information Card -->
+            <div id="info-card" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col flex-1 hidden">
+                <h2 class="text-white font-bold text-base mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Chat Metadata
+                </h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <span class="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Format & Version</span>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span id="meta-format" class="text-xs bg-slate-800 text-indigo-300 px-2 py-1 rounded font-medium code-font">NetAuthChatTranscript</span>
+                            <span id="meta-version" class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded font-medium">v1.0</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Messages Count</span>
+                        <p id="meta-count" class="text-2xl font-bold text-white mt-0.5">0</p>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Interlocutor A (Sender/Right Side)</span>
+                        <p id="meta-p1" class="text-sm font-semibold text-indigo-400 code-font truncate mt-0.5">-</p>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Interlocutor B (Receiver/Left Side)</span>
+                        <p id="meta-p2" class="text-sm font-semibold text-teal-400 code-font truncate mt-0.5">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Help Guide -->
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 text-xs text-slate-400 space-y-2">
+                <span class="text-slate-300 font-bold text-xs uppercase tracking-wide flex items-center">
+                    💡 How it works
+                </span>
+                <p>The NetAuth server handles communications, and the Client app allows exporting conversations inside a <b>.chat</b> format. This file stores a clean chronological log of direct messaging.</p>
+                <p>Use this tool to audit chat backups, export plain-text logs, or generate mockup conversation transcripts offline.</p>
+            </div>
+        </section>
+
+        <!-- Right Chat Window Area -->
+        <section class="lg:col-span-8 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl min-h-[500px] overflow-hidden">
+            
+            <!-- Chat Window Top Bar -->
+            <div class="px-6 py-4 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div id="companion-avatar" class="w-10 h-10 bg-indigo-600/30 border border-indigo-500/30 text-indigo-400 font-bold rounded-full flex items-center justify-center">
+                        ?
+                    </div>
+                    <div>
+                        <h3 id="chat-title" class="text-sm font-bold text-white">No Chat Loaded</h3>
+                        <p id="chat-subtitle" class="text-xs text-slate-400">Please load or generate a chat file</p>
+                    </div>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="relative w-48 md:w-64">
+                    <input type="text" id="search-input" oninput="filterMessages()" placeholder="Search messages..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 pl-9 text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500 absolute left-3 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Messaging Feed Area -->
+            <div id="messages-container" class="flex-1 p-6 space-y-4 overflow-y-auto max-h-[550px] min-h-[350px] bg-slate-950/40">
+                <!-- Empty Placeholder -->
+                <div id="empty-state" class="h-full flex flex-col items-center justify-center text-center py-20">
+                    <div class="bg-slate-900 p-4 rounded-full border border-slate-800/60 mb-4 animate-bounce">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                        </svg>
+                    </div>
+                    <h4 class="text-white font-bold text-sm">Waiting for Chat File</h4>
+                    <p class="text-slate-400 text-xs mt-1 max-w-sm px-6">Upload a chat backup, or click <b>"Mock Chat"</b> to generate a realistic simulated dialogue with test logs.</p>
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="p-4 bg-slate-950/40 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                <span id="filter-status">Showing 0 messages</span>
+                <button id="btn-export-txt" onclick="exportToText()" class="hidden text-indigo-400 hover:text-indigo-300 font-semibold flex items-center space-x-1 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Export Plain Text Transcript</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
+        NetAuth .chat Offline Parsing Tool &copy; 2026 Admin Panel. Secure Local Decoupled Verification.
+    </footer>
+
+    <script>
+        let currentChatData = null;
+
+        // Setup file inputs & dragging
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-indigo-500', 'bg-slate-900');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-indigo-500', 'bg-slate-900');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-slate-900');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Parse file
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.fileFormat !== "NetAuthChatTranscript") {
+                        alert("Warning: This JSON does not appear to be a standard NetAuthChatTranscript file format. Attempting to parse anyway...");
+                    }
+                    renderChat(parsed);
+                } catch(err) {
+                    alert("Failed to parse JSON file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Render chat bubbles
+        function renderChat(data) {
+            currentChatData = data;
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+
+            // Update top companion
+            const participants = data.participants || ["Me", "Friend"];
+            const p1 = participants[0]; // Sender (Right side)
+            const p2 = participants[1]; // Receiver (Left side)
+
+            document.getElementById('chat-title').innerText = p2;
+            document.getElementById('chat-subtitle').innerText = `Direct communication thread with ${p1}`;
+            
+            const avatarChar = p2.charAt(0).toUpperCase();
+            document.getElementById('companion-avatar').innerText = avatarChar;
+
+            // Fill Metadata sidebar
+            document.getElementById('info-card').classList.remove('hidden');
+            document.getElementById('meta-format').innerText = data.fileFormat || "CustomFormat";
+            document.getElementById('meta-version').innerText = "v" + (data.version || "1.0");
+            document.getElementById('meta-count').innerText = (data.messages || []).length;
+            document.getElementById('meta-p1').innerText = p1;
+            document.getElementById('meta-p2').innerText = p2;
+
+            document.getElementById('btn-export-txt').classList.remove('hidden');
+
+            const messages = data.messages || [];
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 text-xs py-10">
+                        No messages found inside this transcript.
+                    </div>
+                `;
+                return;
+            }
+
+            messages.forEach(msg => {
+                const isP1 = msg.senderEmail === p1;
+                const bubbleAlignClass = isP1 ? 'justify-end' : 'justify-start';
+                const bubbleColorClass = isP1 
+                    ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm' 
+                    : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-sm';
+                
+                const timeString = new Date(msg.timestamp).toLocaleString();
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `flex ${bubbleAlignClass} w-full mb-3 message-item`;
+                msgDiv.setAttribute('data-text', (msg.text || '').toLowerCase());
+                msgDiv.innerHTML = `
+                    <div class="max-w-[75%] md:max-w-[60%] flex flex-col ${isP1 ? 'items-end' : 'items-start'}">
+                        <span class="text-[10px] text-slate-500 code-font mb-1">${msg.senderEmail}</span>
+                        <div class="px-4 py-2.5 ${bubbleColorClass} shadow-md">
+                            <p class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHTML(msg.text)}</p>
+                        </div>
+                        <span class="text-[9px] text-slate-500 mt-1">${timeString}</span>
+                    </div>
+                `;
+                container.appendChild(msgDiv);
+            });
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+            filterMessages();
+        }
+
+        // Filter messages by search input
+        function filterMessages() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const items = document.querySelectorAll('.message-item');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const text = item.getAttribute('data-text');
+                if (text.includes(query)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            document.getElementById('filter-status').innerText = `Showing ${visibleCount} of ${items.length} messages`;
+        }
+
+        // Generate Fake .chat transcript
+        function generateFakeChat() {
+            const mockData = {
+                "fileFormat": "NetAuthChatTranscript",
+                "version": "1.0",
+                "participants": [
+                    "kutsandriy14@gmail.com",
+                    "minecraft_pro@netauth.lan"
+                ],
+                "messageCount": 6,
+                "messages": [
+                    {
+                        "id": "msg_001",
+                        "senderEmail": "kutsandriy14@gmail.com",
+                        "receiverEmail": "minecraft_pro@netauth.lan",
+                        "text": "Привет! Настроил NetAuth сервер в локалке?",
+                        "timestamp": Date.now() - 3600000
+                    },
+                    {
+                        "id": "msg_002",
+                        "senderEmail": "minecraft_pro@netauth.lan",
+                        "receiverEmail": "kutsandriy14@gmail.com",
+                        "text": "Привет! Да, поднял на порту 8080. Прописал X-Service-Key админа, базы данных разделены по секторам.",
+                        "timestamp": Date.now() - 3000000
+                    },
+                    {
+                        "id": "msg_003",
+                        "senderEmail": "kutsandriy14@gmail.com",
+                        "receiverEmail": "minecraft_pro@netauth.lan",
+                        "text": "Круто! А как насчёт авто-подключения? Лаунчер находит сервер по UDP-бродкасту?",
+                        "timestamp": Date.now() - 2400000
+                    },
+                    {
+                        "id": "msg_004",
+                        "senderEmail": "minecraft_pro@netauth.lan",
+                        "receiverEmail": "kutsandriy14@gmail.com",
+                        "text": "Да, лаунчер шлёт NETAUTH_DISCOVER на UDP 8888, и сервер сразу отдаёт свой IP. Работает моментально!",
+                        "timestamp": Date.now() - 1800000
+                    },
+                    {
+                        "id": "msg_005",
+                        "senderEmail": "kutsandriy14@gmail.com",
+                        "receiverEmail": "minecraft_pro@netauth.lan",
+                        "text": "Шикарно. Скинь мне свой бэкап в формате .af, я импортирую твои настройки и файлы.",
+                        "timestamp": Date.now() - 1200000
+                    },
+                    {
+                        "id": "msg_006",
+                        "senderEmail": "minecraft_pro@netauth.lan",
+                        "receiverEmail": "kutsandriy14@gmail.com",
+                        "text": "Без проблем! Сделал полный экспорт .af — там все мои файлы, переписки и черные списки. Загружай в лаунчере во вкладке импорта!",
+                        "timestamp": Date.now() - 600000
+                    }
+                ]
+            };
+
+            // Automatically render this chat
+            renderChat(mockData);
+
+            // Trigger file download
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mockData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "mock_minecraft_chat.chat");
+            dlAnchorElem.click();
+        }
+
+        // Export active chat to simple text file
+        function exportToText() {
+            if (!currentChatData) return;
+
+            let output = `NetAuth Conversation Log\n`;
+            output += `Participants: ${currentChatData.participants.join(" & ")}\n`;
+            output += `==========================================\n\n`;
+
+            (currentChatData.messages || []).forEach(msg => {
+                const date = new Date(msg.timestamp).toLocaleString();
+                output += `[${date}] ${msg.senderEmail}: ${msg.text}\n\n`;
+            });
+
+            const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(output);
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `chat_transcript_${currentChatData.participants[1]}.txt`);
+            dlAnchorElem.click();
+        }
+
+        // Helpers
+        function escapeHTML(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

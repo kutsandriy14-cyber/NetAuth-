@@ -1,0 +1,6 @@
+{
+  "name": "NetAuth Client",
+  "description": "A secure client application to connect and authenticate with your NetAuth local cloud database server.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
