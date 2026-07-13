@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main", "master", "develop" ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Android App
@@ -61,3 +64,25 @@ jobs:
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v2.3.1"
+          name: "NetAuth 2.3.1"
+          body: |
+            ### Описание релиза / Release Description
+            Внимание! Данная версия приложения временно **не работает 24/7** и не запустится до тех пор, пока не будет полностью доделана база данных.
+            
+            *Attention! This version is currently **not running 24/7** and won't launch until the database development is completed.*
+            
+            ---
+            **Изменения:**
+            - Полностью настроен рабочий процесс автоматической CI/CD сборки через GitHub Actions.
+            - Автоматический декодинг / генерация подписи debug.keystore при сборке.
+            - Сборка и автоматическая публикация готового установочного файла (.apk).
+          draft: false
+          prerelease: false
+          files: app/build/outputs/apk/debug/app-debug.apk
+
