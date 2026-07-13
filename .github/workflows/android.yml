@@ -35,11 +35,21 @@ jobs:
         with:
           gradle-version: 9.3.1
 
-      - name: Change wrapper permissions
-        run: chmod +x gradlew
+      - name: Clean stale wrapper files if any
+        run: |
+          rm -f gradlew gradlew.bat
+          rm -rf gradle/wrapper
+
+      - name: Decode Debug Keystore
+        run: |
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          else
+            echo "Warning: debug.keystore.base64 not found."
+          fi
 
       - name: Build with Gradle
-        run: ./gradlew :app:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug --no-daemon
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
